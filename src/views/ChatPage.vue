@@ -19,7 +19,10 @@
 
                     <div v-for="(contact, index) in contacts" :key="index" class="contact-container" @click="chat(contact.from_id)">
                         <div class="contact-header" >
-                            <span class="contact-name">{{ contact.from_id }}</span>
+                            <el-avatar >
+                                <img :src = "contact.avatar" alt="Image" class="logoimg"/>
+                            </el-avatar>
+                            <span class="contact-name">{{ contact.name }}</span>
                             <span class="contact-message">{{ contact.text }}</span>
                         </div>
                     </div>
@@ -33,7 +36,9 @@
                                 <ul class="message-list" ref="messageList">
 
                                     <li v-for="(message,index) in messages" :key="index" :class="getMessageClass(message)">
-                                        <span class="author">{{ message.from_id }}</span>
+                                        <el-avatar >
+                                            <img :src = "message.avatar" alt="Image" class="logoimg"/>
+                                        </el-avatar>
                                         <span class="content">{{ message.text }}</span>
                                     </li>
                                 </ul>
@@ -69,6 +74,7 @@ export default {
     name: "MainPage",
     data: function() {
         return {
+            avatar:'',
             collapsed: false,
             toid: '',
             messages: [
@@ -89,6 +95,10 @@ export default {
             if(this.toid)this.chat(this.toid);
         }, 1000); // 1000毫秒（1秒）为间隔
         const token = localStorage.getItem('token');
+        if(!token){this.$router.push({name:'Login'});}
+        const payload = token.split('.')[1];
+        const decodedPayload = atob(payload);
+        const dat = JSON.parse(decodedPayload);
         const data = {
 
         }
@@ -100,7 +110,26 @@ export default {
             .then((response) => {
                 const { code,data } = response.data;
                 if (code===1) {
+
                     this.contacts = data;
+                    for(let i=0; i < this.contacts.length ;i++){
+                        axios.get('http://10.136.133.87:9000/getPerson',{
+                            params: {
+                                'id': this.contacts[i].from_id
+                            }
+                        })
+                            .then((response) => {
+                                const now=response.data.data;
+                                this.contacts[i].avatar = 'http://10.136.133.87:9000/image/'+ now.picture_id;
+                                this.contacts[i].name = now.name;
+                            })
+                            .catch((error) => {
+                                console.error(error);
+                                alert('无法调取信息：' + error.message);
+                            });
+                    }
+                    if(this.contacts.length)this.chat(this.contacts[0].from_id);
+
                 } else {
                     alert('失败');
                 }
@@ -110,6 +139,21 @@ export default {
                 console.error(error);
                 alert('无法调取信息：' + error.message);
             });
+        axios.get('http://10.136.133.87:9000/getPerson',{
+            params: {
+                'id': dat.id
+            }
+        })
+            .then((response) => {
+                const now=response.data.data;
+                this.avatar = 'http://10.136.133.87:9000/image/'+now.picture_id;
+
+            })
+            .catch((error) => {
+                console.error(error);
+                alert('无法调取信息：' + error.message);
+            });
+
     },
     methods: {
 
@@ -151,29 +195,51 @@ export default {
             };
         },
         chat(x){
-            this.toid = x;
-            const data = {
-                id: x
-            };
-
-            const token = localStorage.getItem('token');
-            axios.post('http://10.136.133.87:9000/getContact', data,{
-                headers: {
-                    'token': token
+            axios.get('http://10.136.133.87:9000/getPerson',{
+                params: {
+                    'id': x
                 }
             })
                 .then((response) => {
-                    const { code, data} = response.data;
-                    if (code===1) {
-                        this.messages = data;
-                    } else {
-                        alert('获取信息失败');
-                    }
+                    const now=response.data.data;
+                    const y = 'http://10.136.133.87:9000/image/'+ now.picture_id;
+
+                    this.toid = x;
+                    const data = {
+                        id: x
+                    };
+                    const token = localStorage.getItem('token');
+                    axios.post('http://10.136.133.87:9000/getContact', data,{
+                        headers: {
+                            'token': token
+                        }
+                    })
+                        .then((response) => {
+                            const { code, data} = response.data;
+                            if (code===1) {
+                                if(data.length !== this.messages.length) {
+                                    this.messages = data;
+                                    for (let i = 0; i < this.messages.length; i++) {
+                                        if (this.messages[i].from_id === x) this.messages[i].avatar = y;
+                                        else this.messages[i].avatar = this.avatar;
+                                    }
+                                }
+                            } else {
+                                alert('获取信息失败');
+                            }
+                        })
+                        .catch((error) => {
+                            console.error(error);
+                            alert('获取信息失败：' + error.message);
+                        });
+
+
                 })
                 .catch((error) => {
                     console.error(error);
-                    alert('获取信息失败：' + error.message);
+                    alert('无法调取信息：' + error.message);
                 });
+
         },
         scrollToBottom() {
             const container = this.$refs.chatContainer;
@@ -221,10 +287,18 @@ export default {
 }
 
 .contact-name {
+    margin-left: 0px;
     //font-weight: bold;
 }
 
 .contact-message {
+    width: 50px;
+    overflow:hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    display: -webkit-box;
     color: #666;
 }
 /* 不展开样式*/

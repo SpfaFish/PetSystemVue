@@ -11,17 +11,20 @@
 
 
                 <div class="login-box">
-                    <h2 style="text-align:center">注册</h2>
-                    <form  @submit.prevent="regist" >
+                    <div class="logobox">
+                        <img class="logoimg" src="../assets/logo3.png" alt="" >
+                    </div>
+                    <form  @submit.prevent="regist" style="margin-top: 40px">
+                        <label for="account">账号</label>
+                        <input type="text" id="account" v-model="account" placeholder="请输入账号" required>
 
-                        <label for="account">用户名/账号</label>
-                        <input type="text" id="account" v-model="account" placeholder="请输入用户名" required>
+                        <label for="account">昵称</label>
+                        <input type="text" id="name" v-model="name" placeholder="请输入昵称" required>
 
                         <label for="password">密码</label>
                         <input type="password" id="password" v-model="password" placeholder="请输入密码" required>
 
-                        <label for="name">昵称</label>
-                        <input type="text" id="name" v-model="name" placeholder="请输入用户名（非中文字符）" required>
+
 
                         <label for="province">省份</label>
                         <input type="text" id="province" v-model="province" placeholder="请输入省份信息" required>
@@ -169,7 +172,18 @@ export default {
     background-color: #ff695f;
     margin: 0px;
 }
-
+.logobox{
+    height: 50px;
+    line-height: 40px;
+    color: #9d9d9d;
+    font-size: 20px;
+    text-align: center;
+    padding: 20px 0px;
+}
+.logoimg {
+    height: 110px;
+    margin-top: -17px;
+}
 .main-header,
 .main-center {
     padding: 0px;
@@ -182,15 +196,15 @@ body {
 
 /*设置登录框的样式 */
 .login-box {
-    width: 500px;
-    height: 850px;
+    width: 350px;
+    height: 920px;
     background-color: #fff;
     margin: 100px auto;
     border-radius: 10px;
-    box-shadow: 0 0 5px #000;
+    box-shadow: 0 0 2px #000;
     padding: 20px;
-    color: aliceblue;
-    background-color: #528aff;
+    color: #528aff;
+    background-color: #ffffff;
 }
 
 /*设置输入框样式 */

@@ -80,6 +80,10 @@ export default {
             picture_id:'',
         }
     },
+    mounted() {
+        const token = localStorage.getItem('token');
+        if(!token){this.$router.push({name:'Login'});}
+    },
     methods: {
         get_id(res) {
             if(this.tot === 0){this.tot++; this.picture_id = res.data;}

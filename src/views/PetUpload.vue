@@ -70,6 +70,10 @@ export default {
             idList:[],
         }
     },
+    mounted() {
+        const token = localStorage.getItem('token');
+        if(!token){this.$router.push({name:'Login'});}
+    },
     methods: {
         get_id(res) {
             this.idList.push(res.data);

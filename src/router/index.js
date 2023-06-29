@@ -8,6 +8,11 @@ VueRouter.prototype.push = function push(location) {
 }
 const routes = [
   {
+    path: '/',
+    name: 'MainPage',
+    component:()=>import('../views/MainPage.vue'),
+  },
+  {
     path: '/MainPage',
     name: 'MainPage',
     component:()=>import('../views/MainPage.vue'),

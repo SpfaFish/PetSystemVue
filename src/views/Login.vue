@@ -10,20 +10,24 @@
             <el-main class="main-center">
 
                 <div class="login-box">
-                    <h2 style="text-align:center">欢迎登录</h2>
-
-                    <form>
+                    <div class="logobox">
+                        <img class="logoimg" src="../assets/logo3.png" alt="" >
+                    </div>
+                    <form style="margin-top: 60px">
                         <label for="account">账号</label>
                         <input type="text" id="account" v-model="account" placeholder="请输入账号" />
 
                         <label for="password">密码</label>
                         <input type="password" id="password" v-model="password" placeholder="请输入密码"  />
 
-                        <button type="submit" value="Login" v-on:click="login">登录</button>
+                        <button type="submit" value="Login" v-on:click="login" style="margin-top: 10px">登录</button>
                         <button type="submit" v-on:click="gosignup">注册</button>
                     </form>
                     <div id="error-message" style="display: none; color: red;">Invalid username or password.</div>
 
+                    <i class="el-icon-setting" style="margin-top: 27px; font-size: 20px; margin-left: 213px; color: #999999;"></i>
+                    <i class="el-icon-link" style="margin-top: 30px; font-size: 22px; margin-left: 30px; color: #999999;"></i>
+                    <i class="el-icon-moon" style="margin-top: 30px; font-size: 20px; margin-left: 30px;color: #999999;"></i>
                 </div>
 
             </el-main>
@@ -96,7 +100,18 @@ export default {
     width: 100%;
     box-sizing: border-box;
 }
-
+.logobox{
+    height: 50px;
+    line-height: 40px;
+    color: #9d9d9d;
+    font-size: 20px;
+    text-align: center;
+    padding: 20px 0px;
+}
+.logoimg {
+    height: 110px;
+    margin-top: -17px;
+}
 /* 不展开样式*/
 .main-aside-collapsed {
     /* 在CSS中，通过对某一样式声明! important ，可以更改默认的CSS样式优先级规则，使该条样式属性声明具有最高优先级 */
@@ -126,15 +141,14 @@ body {
 
 /*设置登录框的样式 */
 .login-box {
-    width: 500px;
-    height: 350px;
-    background-color: #fff;
+    width: 350px;
+    height: 470px;
+    background-color: #ffffff;
     margin: 100px auto;
     border-radius: 10px;
-    box-shadow: 0 0 5px #000;
+    box-shadow: 0 0 2px #000;
     padding: 20px;
-    color: aliceblue;
-    background-color: #528aff;
+    color: #528aff;
 }
 
 /*设置输入框样式 */

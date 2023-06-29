@@ -7,8 +7,8 @@
         <el-button class="signupbotton" v-if="this.IsLogin === false" v-on:click="signup">注册</el-button>
         <el-submenu index="2" class="submenu">
             <template slot="title">
-                <el-avatar >
-                    <img :src = "avatar" alt="Image" class="logoimg"/>
+                <el-avatar :src="avatar" @error="errorHandler">
+                <img src = "https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fc-ssl.duitang.com%2Fuploads%2Fitem%2F202003%2F25%2F20200325142318_jWPnn.thumb.400_0.jpeg&refer=http%3A%2F%2Fc-ssl.duitang.com&app=2002&size=f9999,10000&q=a80&n=0&g=0n&fmt=auto?sec=1690593076&t=47969880749444460d2d4c6b07ea969d" alt="Image" class="logoimg"/>
                 </el-avatar>
             </template>
             <el-menu-item index="2-1" v-on:click="chatpage">私信</el-menu-item>
@@ -33,15 +33,16 @@ export default {
         }
     },
     mounted() {
-        const tokenl = localStorage.getItem('token');
-        const payloadl = tokenl.split('.')[1];
-        const decodedPayloadl = atob(payloadl);
-        const datl = JSON.parse(decodedPayloadl);
-        if(datl.id) this.IsLogin=true;
+        const token = localStorage.getItem('token');
+        const payload = token.split('.')[1];
+        const decodedPayload = atob(payload);
+        const dat = JSON.parse(decodedPayload);
+        if(dat.id) this.IsLogin=true;
+
 
         axios.get('http://10.136.133.87:9000/getPerson',{
             params: {
-                'id': datl.id
+                'id': dat.id
             }
         })
             .then((response) => {
@@ -55,6 +56,9 @@ export default {
 
     },
     methods: {
+        errorHandler() {
+            return true
+        },
         doToggle: function() { //主要控制collapsed为true和false
             this.collapsed = !this.collapsed;
             this.$root.Bus.$emit("Handle", this.collapsed);
@@ -77,7 +81,8 @@ export default {
         },
         userpage(){
             localStorage.setItem('sto_id', '');
-            this.$router.push({name:'Userpage'});
+            if(this.$route.path === '/Userpage')location.reload();
+            else this.$router.push({name:'Userpage'});
         },
         chatpage(){
             this.$router.push({name:'ChatPage'});

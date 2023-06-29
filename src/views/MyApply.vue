@@ -21,7 +21,7 @@
                     </el-table-column>
                     <el-table-column
                             prop="pet_id"
-                            label="宠物昵称"
+                            label="宠物ID"
                             width="180">
                     </el-table-column>
                     <el-table-column
@@ -69,6 +69,7 @@ export default {
     },
     mounted() {
         const token = localStorage.getItem('token');
+        if(!token){this.$router.push({name:'Login'});}
         const payload = token.split('.')[1];
         const decodedPayload = atob(payload);
         const dat = JSON.parse(decodedPayload);
@@ -84,6 +85,11 @@ export default {
                 const { code, data} = response.data;
                 if (code===1) {
                     this.tableData = data;
+                    for(let i=0; i < this.tableData.length;i++){
+                        if(this.tableData[i].stat === -1)this.tableData[i].stat='已拒绝' ;
+                        if(this.tableData[i].stat === 0)this.tableData[i].stat='待审核' ;
+                        if(this.tableData[i].stat === 1)this.tableData[i].stat='已同意' ;
+                    }
                 } else {
                     alert('获取信息失败');
                 }
@@ -100,7 +106,7 @@ export default {
                 from_id: row.from_id,
                 to_id: row.pet_id,
                 time: row.time,
-                stat: false,
+                stat: -1,
             }
             const token = localStorage.getItem('token');
             axios.post('http://10.136.133.87:9000/Adopt', data, {

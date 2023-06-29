@@ -14,7 +14,7 @@
                     <el-carousel :interval="4000" type="card" height="300px">
                         <el-carousel-item v-for="(png,index) in pngList" :key="index">
 
-                            <img :src = "png" alt="Image" class="logoimg"/>
+                            <img :src = "png" alt="Image" class="logoimg" @click="jump"/>
 
                         </el-carousel-item>
                     </el-carousel>
@@ -22,20 +22,53 @@
 
 
                 <el-row :gutter="10">
+                    <div style="display: flex;">
                     <el-page-header @back="goBack" content="帖子列表" style="margin-left: 60px; margin-top: 50px;">
                     </el-page-header>
-                    <el-col :span="5" v-for="(posts, index) in postList" :key="index" :offset="index > 0 ? 0 : 0">
+                        <span style="margin-top: 50px; font-size: 15px; margin-left: 60px;">关键词:</span>
+                    <el-input style="width: 200px; margin-top: 43px; margin-left: 10px;" type="text" v-model="searchname"></el-input>
+                        <span style="margin-top: 50px; font-size: 15px; margin-left: 10px;">点赞数:</span>
+                        <div style="margin-top: 47px; margin-left: 10px;">
+                            <el-radio-group v-model="searchlike" size="small">
+                                <el-radio-button label="0"></el-radio-button>
+                                <el-radio-button label="10"></el-radio-button>
+                                <el-radio-button label="100"></el-radio-button>
+                                <el-radio-button label="1000"></el-radio-button>
+                            </el-radio-group>
+                        </div>
+                        <span style="margin-top: 52px; font-size: 15px; margin-left: 10px;">收藏数:</span>
+                        <div style="margin-top: 47px; margin-left: 10px;">
+                            <el-radio-group v-model="searchcollect" size="small">
+                                <el-radio-button label="0"></el-radio-button>
+                                <el-radio-button label="10"></el-radio-button>
+                                <el-radio-button label="100"></el-radio-button>
+                                <el-radio-button label="1000"></el-radio-button>
+                            </el-radio-group>
+                        </div>
+                    <el-button style="height: 40px; margin-top: 43px; margin-left: 10px;" v-on:click="searchpost">搜索</el-button>
+                    </div>
+                    <div >
+
+                    <el-col :span="5" v-for="(posts, index)  in postList.slice((currentPage-1) * PageSize, currentPage * PageSize)" :key="index" :offset="index > 0 ? 0 : 0">
                         <el-card :body-style="{ padding: '0px' }" style="width: 250px; margin-top: 50px; margin-left: 60px;">
                             <img :src = "posts.picture_id" alt="Image" class="image" v-on:click="gopost(posts.id)"/>
                             <div style="padding: 14px;">
-                                <span v-on:click="gopost(posts.id)">{{posts.name }}</span>
+                                <span v-on:click="gopost(posts.id)" class="postname">{{posts.name }}</span>
                                 <div class="bottom clearfix">
-                                    <span v-on:click="gouser(posts.person_id)" class="menu-item">{{ posts.person_id }}</span>
+                                    <span v-on:click="gouser(posts.person_id)" class="pname">{{ posts.person_name }}</span>
                                 </div>
                             </div>
                         </el-card>
                     </el-col>
+                    </div>
                 </el-row>
+                <el-pagination
+                               @current-change="handleCurrentChange"
+                               :current-page="currentPage"
+                               :page-size="PageSize" layout="total, prev, pager, next, jumper"
+                               :total="totalCount"
+                               style="margin-left: 40%; margin-top: 40px;">
+                </el-pagination>
 
 
             </el-main>
@@ -54,6 +87,15 @@ export default {
     name: "MainPage",
     data: function() {
         return {
+            // 默认显示第几页
+            currentPage:1,
+            // 总条数，根据接口获取数据长度(注意：这里不能为空)
+            totalCount:0,
+            // 默认每页显示的条数（可修改）
+            PageSize:12,
+            searchname:'',
+            searchlike:'',
+            searchcollect:'',
             my_id:'',
             postList:[],
             pngList:[
@@ -71,6 +113,7 @@ export default {
                 const { code, data} = response.data;
                 if (code===1) {
                     this.postList = data;
+                    this.totalCount = this.postList.length;
                     for (let i = 0; i < this.postList.length; i++){
                         this.postList[i].picture_id = 'http://10.136.133.87:9000/image/' + this.postList[i].picture_id;
                     }
@@ -82,6 +125,11 @@ export default {
             });
     },
     methods: {
+        // 显示第几页
+        handleCurrentChange(val) {
+            // 改变默认的页数
+            this.currentPage=val
+        },
         gouser(uid){
             localStorage.setItem('sto_id', uid);
             this.$router.push({name:'Userpage'});
@@ -89,6 +137,32 @@ export default {
         gopost(postid){
             localStorage.setItem('post_id', postid);
             this.$router.push({name:'PostPage'});
+        },
+        jump() {
+            window.open('https://sr.mihoyo.com/', '_blank')
+        },
+        searchpost(){
+            axios.get('http://10.136.133.87:9000/searchPost',{
+                params:{
+                    name: this.searchname,
+                    like_count: this.searchlike,
+                    collect_count: this.searchcollect
+                }
+            })
+                .then((response) => {
+                    const { code, data} = response.data;
+                    if (code===1) {
+                        this.postList = data;
+                        this.totalCount = this.postList.length;
+                        for (let i = 0; i < this.postList.length; i++){
+                            this.postList[i].picture_id = 'http://10.136.133.87:9000/image/' + this.postList[i].picture_id;
+                        }
+                    }
+                })
+                .catch((error) => {
+                    console.error(error);
+                    alert('获取信息失败：' + error.message);
+                });
         }
     },
     computed: { //计算属性
@@ -149,6 +223,15 @@ export default {
 .el-carousel__item:nth-child(2n+1) {
     background-color: #d3dce6;
 }
+.postname{
+    width: 230px;
+    overflow:hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    display: -webkit-box;
+}
 .main-header,
 .main-center {
     padding: 0px;
@@ -194,7 +277,10 @@ export default {
     display: table;
     content: "";
 }
-
+.pname{
+    font-size: 14px;
+    color: #9d9d9d;
+}
 .clearfix:after {
     clear: both
 }

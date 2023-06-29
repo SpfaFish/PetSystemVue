@@ -16,19 +16,33 @@
                         <span style="font-weight: bold;">{{this.name}}</span>
                         <el-button style=" margin-left : 10px;float: right; padding: 3px 0" type="text" v-on:click="colletpost">收藏帖子</el-button>
                         <el-button style=" margin-left : 10px;float: right; padding: 3px 0" type="text"  v-on:click="likepost">点赞</el-button>
-                        <el-button style="float: right; padding: 3px 0" type="text" v-if="this.is_me === true" v-on:click="deletepost">删除帖子</el-button>
+                        <el-button style="float: right; padding: 3px 0" type="text" v-if="this.root ||this.is_me === true" v-on:click="deletepost">删除帖子</el-button>
                     </div>
                     <el-avatar >
                         <img :src = "this.avatar" alt="Image" class="logoimg" v-on:click="gouser()"/>
                     </el-avatar>
                     <span style="margin-left: 10px;" v-on:click="gouser()">{{ this.p_name}}</span>
-                    <br>
-                    <br>
-                    <span style="font-size: 15px;">{{this.text}}</span>
-                    <br>
-                    <br>
-                    <br>
 
+                    <span style="margin-left: 650px; font-style: italic;">{{this.like_count}}</span>
+                    <span style="margin-left: 6px; font-style: italic; ">likes</span>
+                    <span style="margin-left: 20px; font-style: italic;">{{this.collect_count}}</span>
+                    <span style="margin-left: 6px; font-style: italic; ">collected</span>
+                    <br>
+                    <br>
+                    <span style="font-size: 15px;white-space: pre-wrap;">{{this.text}}</span>
+                    <br>
+                    <br>
+                    <br>
+                    <img :src = "picture_id" alt="Image" style="width: 400px;" />
+
+                    <li v-for="(pid,index) in idList" :key="index" >
+                        <el-avatar >
+                            <img :src = "pid" alt="Image" style="width: 400px;"/>
+                        </el-avatar>
+                    </li>
+                    <br>
+                    <br>
+                    <br>
                     <el-button class="signupbotton" v-if="this.pet_id" @click="PetDetails()">关联宠物</el-button>
 
                 </el-card>
@@ -88,6 +102,7 @@ export default {
     name: "PostPage",
     data: function() {
         return {
+            root:0,
             url:'',
             centerDialogVisible: false,
             p_name:'',
@@ -96,10 +111,10 @@ export default {
             is_me:false,
             name:'',
             text:'',
-            like_count:'',
-            collect_count:'',
+            like_count:0,
+            collect_count:0,
             picture_id:'',
-            idList:'',
+            idList:[],
             collapsed: false,
             pet_id:'',
             petData:[],
@@ -107,9 +122,29 @@ export default {
     },
     mounted() {
         const token = localStorage.getItem('token');
-        const payload = token.split('.')[1];
-        const decodedPayload = atob(payload);
-        const dat = JSON.parse(decodedPayload);
+        var dat;
+        if(token) {
+            const payload = token.split('.')[1];
+            const decodedPayload = atob(payload);
+            dat = JSON.parse(decodedPayload);
+            axios.get('http://10.136.133.87:9000/CheckRoot',{
+                headers: {
+                    'token': token
+                }
+            })
+                .then((response) => {
+
+                    const { code, data} = response.data;
+                    if (code===1) {
+                        this.root = data;
+
+                    }
+                })
+                .catch((error) => {
+                    console.error(error);
+                    alert('获取信息失败：' + error.message);
+                });
+        }
         var post_id = localStorage.getItem('post_id');
         axios.get('http://10.136.133.87:9000/GetPost',{
             params: {
@@ -117,17 +152,22 @@ export default {
             }
         })
             .then((response) => {
+
                 const { code, data} = response.data;
                 if (code===1) {
                     this.name = data.name;
                     this.text = data.text;
-                    this.like_count = data.like_countl;
+                    this.like_count = data.like_count;
                     this.collect_count = data.collect_count;
-                    this.picture_id = data.picture_id;
+                    this.picture_id = 'http://10.136.133.87:9000/image/' + data.picture_id;
                     this.idList = data.picArray;
+                    for(let i=0; i < this.idList.length; i++){
+                        this.idList[i] = 'http://10.136.133.87:9000/image/' + this.idList[i];
+                    }
                     this.pet_id = data.pet_id;
                     this.p_id = data.person_id;
-                    if(this.p_id === dat.id)this.is_me = true;
+                    if(token && this.p_id === dat.id)this.is_me = true;
+
                     for (let i = 0; i < this.idList.length; i++){
                         this.idList[i].pic_id = 'http://10.136.133.87:9000/image/' + this.idList[i].pic_id;
                     }
@@ -198,6 +238,7 @@ export default {
                 .then((response) => {
                     const {code}=response.data;
                     if(code){alert("点赞成功！");}
+                    location.reload();
                 })
                 .catch((error) => {
                     console.error(error);
@@ -217,6 +258,7 @@ export default {
                 .then((response) => {
                     const {code}=response.data;
                     if(code){alert("收藏成功！");}
+                    location.reload();
                 })
                 .catch((error) => {
                     console.error(error);

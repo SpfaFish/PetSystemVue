@@ -100,6 +100,7 @@ export default {
     },
     mounted() {
         const token = localStorage.getItem('token');
+        if(!token){this.$router.push({name:'Login'});}
         const payload = token.split('.')[1];
         const decodedPayload = atob(payload);
         const dat = JSON.parse(decodedPayload);

@@ -18,8 +18,8 @@
                         <el-button style=" margin-left : 10px;float: right; padding: 3px 0" type="text" v-if="this.is_me === false && this.attentioned === false" v-on:click="attention">关注</el-button>
                         <el-button style="float: right; padding: 3px 0" type="text" v-if="this.is_me === true" v-on:click="updateprofile">修改信息</el-button>
                     </div>
-                    <el-avatar >
-                        <img :src = "avatar" alt="Image" class="logoimg"/>
+                    <el-avatar :src ="avatar" @error="errorHandler">
+                        <img src = "https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fc-ssl.duitang.com%2Fuploads%2Fitem%2F202003%2F25%2F20200325142318_jWPnn.thumb.400_0.jpeg&refer=http%3A%2F%2Fc-ssl.duitang.com&app=2002&size=f9999,10000&q=a80&n=0&g=0n&fmt=auto?sec=1690593076&t=47969880749444460d2d4c6b07ea969d" alt="Image" class="logoimg"/>
                     </el-avatar>
                     <el-upload
                         class="upload-demo"
@@ -33,10 +33,10 @@
                     v-if="this.is_me === true">
                         <el-button slot="trigger" size="small" type="primary">选取头像</el-button>
                     </el-upload>
-                    <label for="name" class="char_lt">用户名:</label>
+                    <label for="name" class="char_lt">昵称:</label>
                     <el-input type="text" id="name" v-model="name" required></el-input>
                     <br>
-                    <label for="id" class="char_lt">账号 :</label>
+                    <label for="id" class="char_lt">账号ID :</label>
                     <el-input type="text" id="id" v-model="id" disabled></el-input>
                     <label for="province" class="char_lt">省份:</label>
                     <el-input type="text" id="province" v-model="province"></el-input>
@@ -69,8 +69,11 @@
                                 <el-scrollbar ref="scrollbar" wrap-class="scrollbar-wrap">
                                     <ul class="message-list" ref="messageList">
 
-                                        <li v-for="(attention,index) in attentionlist" :key="index" @click="gouser(attention)" >
-                                            <span class="author">{{ attention }}</span>
+                                        <li v-for="(attention,index) in attentionlist" :key="index" @click="gouser(attention.id)" >
+                                            <el-avatar >
+                                                <img :src = "attention.avatar" alt="Image" class="logoimg"/>
+                                            </el-avatar>
+                                            <span class="author">{{ attention.name }}</span>
                                         </li>
                                     </ul>
                                 </el-scrollbar>
@@ -112,12 +115,14 @@ export default {
             oldpassword: '',
             newpassword: '',
             attentionlist: [],
+            attentionlistl: [],
             fileList:[],
             idList:[],
         }
     },
     mounted() {
         const token = localStorage.getItem('token');
+        if(!token){this.$router.push({name:'Login'});}
         const payload = token.split('.')[1];
         const decodedPayload = atob(payload);
         const dat = JSON.parse(decodedPayload);
@@ -146,7 +151,6 @@ export default {
             })
             .catch((error) => {
                 console.error(error);
-                alert('无法调取信息：' + error.message);
             });
         //获得关注列表
         axios.get('http://10.136.133.87:9000/MyAttention',{
@@ -156,7 +160,22 @@ export default {
         })
             .then((response) => {
                 const now=response.data.data;
-                this.attentionlist = now;
+                for(let i=0; i < now.length ; i++){
+                    axios.get('http://10.136.133.87:9000/getPerson',{
+                        params: {
+                            'id': now[i]
+                        }
+                    })
+                        .then((response) => {
+                            const nowl=response.data.data;
+                            this.attentionlist.push({id: now[i],avatar: 'http://10.136.133.87:9000/image/'+nowl.picture_id,name: nowl.name});
+                        })
+                        .catch((error) => {
+                            console.error(error);
+                            alert('无法调取信息：' + error.message);
+                        });
+
+                }
                 //得到信息后复制
             })
             .catch((error) => {
@@ -184,6 +203,9 @@ export default {
         }
     },
     methods: {
+        errorHandler() {
+            return true
+        },
         get_id(res) {
             this.idList.push(res.data);
         },
@@ -351,6 +373,7 @@ export default {
 }
 .author {
     font-weight: bold;
+    margin-left: 10px;
 }
 .box-card {
     margin-top: 60px;
